@@ -10,6 +10,6 @@ The reference implementation used for development and testing is Raspberry Pi 3 
 #References
 [MAX31856 Datasheet](https://datasheets.maximintegrated.com/en/ds/MAX31856.pdf)
 
-[John Robinson's](https://github.com/johnrbnsn)[Python max31856 implementation](https://github.com/johnrbnsn/Adafruit_Python_MAX31856)
+[John Robinson's](https://github.com/johnrbnsn) [Python max31856 implementation](https://github.com/johnrbnsn/Adafruit_Python_MAX31856)
 
 Brian Cooke's very nice [spi-device](https://github.com/fivdi/spi-device) for Node.
