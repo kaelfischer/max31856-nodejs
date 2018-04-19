@@ -1,0 +1,31 @@
+{
+  "name": "max31856",
+  "version": "0.0.1",
+  "description": "Node interface to the max31865 thermocouple converter over SPI on Raspberry Pi, BeagleBone, etc.",
+  "main": "max31856.js",
+  "scripts": {
+    "test": "\"test\": \"echo \\\"Tests can only be run manually from the command line.\\\" && exit 1\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaelfischer/max31856-nodejs.git"
+  },
+  "keywords": [
+    "spi",
+    "thremocouple",
+    "max31856",
+    "pi",
+    "raspberry",
+    "raspi",
+    "beaglebone"
+  ],
+  "author": "Kael Fischer <kael@dork.haus>",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/kaelfischer/max31856-nodejs/issues"
+  },
+  "homepage": "https://github.com/kaelfischer/max31856-nodejs#readme",
+  "dependencies": {
+    "spi-device": "^2.0.2"
+  }
+}
