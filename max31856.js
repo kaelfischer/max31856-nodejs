@@ -1,4 +1,5 @@
 'use strict';
+
 const spi = require('spi-device');
 
 const CONST_THERM_LSB = 2**-7;
@@ -6,8 +7,8 @@ const CONST_THERM_BITS = 19;
 const CONST_CJ_LSB = 2**-6;
 const CONST_CJ_BITS = 14;
 
-// ### Register constants, see data sheet Table 6 (in Rev. 0) for info.;
-// # Read Addresses
+// Register constants, see data sheet Table 6 (in Rev. 0) for info.
+// https://datasheets.maximintegrated.com/en/ds/MAX31856.pdf
 const REG_READ_CR0 = 0x00;
 const REG_READ_CR1 = 0x01;
 const REG_READ_MASK = 0x02;
@@ -19,11 +20,11 @@ const REG_READ_LTLFTH = 0x07;
 const REG_READ_LTLFTL = 0x08;
 const REG_READ_CJTO = 0x09;
 const REG_READ_CJTH = 0x0A;  // Cold-Junction Temperature Register, MSB;
-const REG_READ_CJTL = 0x0B;  //# Cold-Junction Temperature Register, LSB;
-const REG_READ_LTCBH = 0x0C; //# Linearized TC Temperature, Byte 2;
-const REG_READ_LTCBM = 0x0D; //# Linearized TC Temperature, Byte 1;
-const REG_READ_LTCBL = 0x0E; //# Linearized TC Temperature, Byte 0;
-const REG_READ_FAULT = 0x0F; //# Fault status register;
+const REG_READ_CJTL = 0x0B;  // Cold-Junction Temperature Register, LSB;
+const REG_READ_LTCBH = 0x0C; // Linearized TC Temperature, Byte 2;
+const REG_READ_LTCBM = 0x0D; // Linearized TC Temperature, Byte 1;
+const REG_READ_LTCBL = 0x0E; // Linearized TC Temperature, Byte 0;
+const REG_READ_FAULT = 0x0F; // Fault status register;
 
 //# Write Addresses
 const REG_WRITE_CR0 = 0x80;
@@ -36,14 +37,14 @@ const REG_WRITE_LTHFTL = 0x86;
 const REG_WRITE_LTLFTH = 0x87;
 const REG_WRITE_LTLFTL = 0x88;
 const REG_WRITE_CJTO = 0x89;
-const REG_WRITE_CJTH = 0x8A;  //# Cold-Junction Temperature Register, MSB;
-const REG_WRITE_CJTL = 0x8B;  //# Cold-Junction Temperature Register, LSB;
+const REG_WRITE_CJTH = 0x8A;  // Cold-Junction Temperature Register, MSB;
+const REG_WRITE_CJTL = 0x8B;  // Cold-Junction Temperature Register, LSB;
 
 //# Pre-config Register Options
-const CR0_READ_ONE = 0x40; //# One shot reading, delay approx. 200ms then read temp registers;
-const CR0_READ_CONT = 0x80; //# Continuous reading, delay approx. 100ms between readings;
+const CR0_READ_ONE = 0x40; // One shot reading, delay approx. 200ms then read temp registers;
+const CR0_READ_CONT = 0x80; // Continuous reading, delay approx. 100ms between readings;
 
-//  Thermocouple Types
+// Thermocouple Types
 const B_TYPE = 0x0;
 const E_TYPE = 0x1;
 const J_TYPE = 0x2;
@@ -54,7 +55,7 @@ const S_TYPE = 0x6;
 const T_TYPE = 0x7;
 
 const TC_TYPES = ['B','E','J','K','N','R','S','T'];
-const SAMPLES = [1,2,4,8,16]
+const SAMPLES = [1,2,4,8,16];
 
 const FAULTS = ['Thermocouple Open-Circuit Fault',
 				'Overvoltage or Undervoltage Input Fault',
@@ -74,10 +75,9 @@ class MAX31856 {
                 mode: spi.MODE3,
                 maxSpeedHz: 50000
             });
-        //console.log('device: ' + this._device);
 
         // set TC type ans # of samples = 4
-        this.writeRegister(REG_WRITE_CR1, (0x2 << 4) + tcType);
+        this.writeRegister(REG_WRITE_CR1, (0b100 << 4) + tcType);
 
         // set continuious read
         this.writeRegister(REG_WRITE_CR0, CR0_READ_CONT);
@@ -107,10 +107,6 @@ class MAX31856 {
 		const msb = this.readRegister(REG_READ_LTCBM);
 		const hsb = this.readRegister(REG_READ_LTCBH);
 
-        //console.log(lsb);
-        //console.log(msb);
-        //console.log(hsb);
-        
 		let tempBytes = (((hsb & 0x7F) << 16) + (msb << 8) + lsb);
 		tempBytes = tempBytes >> 5;
 
@@ -163,16 +159,6 @@ class MAX31856 {
 
     }
 }
-
-
-
-/*
-const testDev = new MAX31856(0,0,T_TYPE);
-console.log(testDev.tempC());
-console.log(testDev._device);
-console.log(Number(testDev.readRegister(REG_READ_CR1)).toString(2));
-*/
-
 
 module.exports = {
 	CONST_THERM_LSB: CONST_THERM_LSB,

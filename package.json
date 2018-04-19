@@ -26,6 +26,10 @@
   },
   "homepage": "https://github.com/kaelfischer/max31856-nodejs#readme",
   "dependencies": {
+    "eslint": "^4.19.1",
     "spi-device": "^2.0.2"
+  },
+  "devDependencies": {
+    "eslint-config-google": "^0.9.1"
   }
 }
