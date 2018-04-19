@@ -2,9 +2,9 @@
 
 const spi = require('spi-device');
 
-const CONST_THERM_LSB = 2**-7;
+const CONST_THERM_LSB = 2 ** -7;
 const CONST_THERM_BITS = 19;
-const CONST_CJ_LSB = 2**-6;
+const CONST_CJ_LSB = 2 ** -6;
 const CONST_CJ_BITS = 14;
 
 // Register constants, see data sheet Table 6 (in Rev. 0) for info.
@@ -54,21 +54,21 @@ const R_TYPE = 0x5;
 const S_TYPE = 0x6;
 const T_TYPE = 0x7;
 
-const TC_TYPES = ['B','E','J','K','N','R','S','T'];
-const SAMPLES = [1,2,4,8,16];
+const TC_TYPES = ['B', 'E', 'J', 'K', 'N', 'R', 'S', 'T'];
+const SAMPLES = [1, 2, 4, 8, 16];
 
 const FAULTS = ['Thermocouple Open-Circuit Fault',
-				'Overvoltage or Undervoltage Input Fault',
-				'Thermocouple Temperature Low Fault',
-				'Thermocouple Temperature High Fault',
-				'Cold-Junction Low Fault',
-				'Cold-Junction High Fault',
-				'Thermocouple Out-of-Range',
-				'Cold Junction Out-of-Range',];
+    'Overvoltage or Undervoltage Input Fault',
+    'Thermocouple Temperature Low Fault',
+    'Thermocouple Temperature High Fault',
+    'Cold-Junction Low Fault',
+    'Cold-Junction High Fault',
+    'Thermocouple Out-of-Range',
+    'Cold Junction Out-of-Range',];
 
 
 class MAX31856 {
-    constructor(bus,device,tcType) {
+    constructor(bus, device, tcType) {
         // use slow speed for better results on noisy prototype boards
         this._device = spi.openSync(bus, device,
             {
@@ -85,35 +85,38 @@ class MAX31856 {
 
         return this;
     }
-    
+
     readRegister(registerAddress) {
-	let message = [{sendBuffer: Buffer.from([registerAddress, 0x00]),
-		      receiveBuffer: Buffer.alloc(2),
-		      byteLength: 2
-		     }];
-	this._device.transferSync(message);
-	return message[0].receiveBuffer[1];
+        let message = [{
+            sendBuffer: Buffer.from([registerAddress, 0x00]),
+            receiveBuffer: Buffer.alloc(2),
+            byteLength: 2
+        }];
+        this._device.transferSync(message);
+        return message[0].receiveBuffer[1];
     }
 
-    writeRegister(registerAddress,outByte) {
-	this._device.transferSync(
-	    [{sendBuffer:Buffer.from([registerAddress,outByte]),
-	      byteLength:2}]);
-	return null;
+    writeRegister(registerAddress, outByte) {
+        this._device.transferSync(
+            [{
+                sendBuffer: Buffer.from([registerAddress, outByte]),
+                byteLength: 2
+            }]);
+        return null;
     }
 
     tempC() {
-		const lsb = this.readRegister(REG_READ_LTCBL);
-		const msb = this.readRegister(REG_READ_LTCBM);
-		const hsb = this.readRegister(REG_READ_LTCBH);
+        const lsb = this.readRegister(REG_READ_LTCBL);
+        const msb = this.readRegister(REG_READ_LTCBM);
+        const hsb = this.readRegister(REG_READ_LTCBH);
 
-		let tempBytes = (((hsb & 0x7F) << 16) + (msb << 8) + lsb);
-		tempBytes = tempBytes >> 5;
+        let tempBytes = (((hsb & 0x7F) << 16) + (msb << 8) + lsb);
+        tempBytes = tempBytes >> 5;
 
-		if (hsb & 0x80) {
-			tempBytes -= 2**(CONST_THERM_BITS -1);
-		}
-		return tempBytes*CONST_THERM_LSB
+        if (hsb & 0x80) {
+            tempBytes -= 2 ** (CONST_THERM_BITS - 1);
+        }
+        return tempBytes * CONST_THERM_LSB
     }
 
 
@@ -122,36 +125,36 @@ class MAX31856 {
     }
 
 
-    cr1Register () {
+    cr1Register() {
         return this.readRegister(REG_READ_CR1)
     }
 
 
     faultRegister() {
-		return this.readRegister(REG_READ_FAULT)
-	}
-	
-	faults() {
-		let rv = [];
-		const mask = 0x1;
-		const faultByte = this.faultRegister();
-		for (let i of Array(8).keys()) {
-			if ( faultByte & (mask << i)) {
-				rv.push(FAULTS[i]);
-			}
-		}
-		return rv;	
-	}
+        return this.readRegister(REG_READ_FAULT)
+    }
 
-	tcType() {
+    faults() {
+        let rv = [];
+        const mask = 0x1;
+        const faultByte = this.faultRegister();
+        for (let i of Array(8).keys()) {
+            if (faultByte & (mask << i)) {
+                rv.push(FAULTS[i]);
+            }
+        }
+        return rv;
+    }
+
+    tcType() {
         const cr1 = this.cr1Register();
         return TC_TYPES[cr1 & 0b1111];
     }
 
-    avgSamples(){
+    avgSamples() {
         const cr1 = this.cr1Register();
         const nibble = cr1 >> 4;
-        if (nibble > 3){
+        if (nibble > 3) {
             return 16
         } else {
             return SAMPLES[nibble]
@@ -161,47 +164,47 @@ class MAX31856 {
 }
 
 module.exports = {
-	CONST_THERM_LSB: CONST_THERM_LSB,
-	CONST_THERM_BITS: CONST_THERM_BITS,
-	CONST_CJ_LSB: CONST_CJ_LSB,
-	CONST_CJ_BITS: CONST_CJ_BITS,
-	REG_READ_CR0: REG_READ_CR0,
-	REG_READ_CR1: REG_READ_CR1,
-	REG_READ_MASK: REG_READ_MASK,
-	REG_READ_CJHF: REG_READ_CJHF,
-	REG_READ_CJLF: REG_READ_CJLF,
-	REG_READ_LTHFTH: REG_READ_LTHFTH,
-	REG_READ_LTHFTL: REG_READ_LTHFTL,
-	REG_READ_LTLFTH: REG_READ_LTLFTH,
-	REG_READ_LTLFTL: REG_READ_LTLFTL,
-	REG_READ_CJTO: REG_READ_CJTO,
-	REG_READ_CJTH: REG_READ_CJTH,
-	REG_READ_CJTL: REG_READ_CJTL,
-	REG_READ_LTCBH: REG_READ_LTCBH,
-	REG_READ_LTCBM: REG_READ_LTCBM,
-	REG_READ_LTCBL: REG_READ_LTCBL,
-	REG_READ_FAULT: REG_READ_FAULT,
-	REG_WRITE_CR0: REG_WRITE_CR0,
-	REG_WRITE_CR1: REG_WRITE_CR1,
-	REG_WRITE_MASK: REG_WRITE_MASK,
-	REG_WRITE_CJHF: REG_WRITE_CJHF,
-	REG_WRITE_CJLF: REG_WRITE_CJLF,
-	REG_WRITE_LTHFTH: REG_WRITE_LTHFTH,
-	REG_WRITE_LTHFTL: REG_WRITE_LTHFTL,
-	REG_WRITE_LTLFTH: REG_WRITE_LTLFTH,
-	REG_WRITE_LTLFTL: REG_WRITE_LTLFTL,
-	REG_WRITE_CJTO: REG_WRITE_CJTO,
-	REG_WRITE_CJTH: REG_WRITE_CJTH,
-	REG_WRITE_CJTL: REG_WRITE_CJTL,
-	CR0_READ_ONE: CR0_READ_ONE,
-	CR0_READ_CONT: CR0_READ_CONT,
-	B_TYPE: B_TYPE,
-	E_TYPE: E_TYPE,
-	J_TYPE: J_TYPE,
-	K_TYPE: K_TYPE,
-	N_TYPE: N_TYPE,
-	R_TYPE: R_TYPE,
-	S_TYPE: S_TYPE,
-	T_TYPE: T_TYPE,
-	MAX31856: MAX31856,
+    CONST_THERM_LSB: CONST_THERM_LSB,
+    CONST_THERM_BITS: CONST_THERM_BITS,
+    CONST_CJ_LSB: CONST_CJ_LSB,
+    CONST_CJ_BITS: CONST_CJ_BITS,
+    REG_READ_CR0: REG_READ_CR0,
+    REG_READ_CR1: REG_READ_CR1,
+    REG_READ_MASK: REG_READ_MASK,
+    REG_READ_CJHF: REG_READ_CJHF,
+    REG_READ_CJLF: REG_READ_CJLF,
+    REG_READ_LTHFTH: REG_READ_LTHFTH,
+    REG_READ_LTHFTL: REG_READ_LTHFTL,
+    REG_READ_LTLFTH: REG_READ_LTLFTH,
+    REG_READ_LTLFTL: REG_READ_LTLFTL,
+    REG_READ_CJTO: REG_READ_CJTO,
+    REG_READ_CJTH: REG_READ_CJTH,
+    REG_READ_CJTL: REG_READ_CJTL,
+    REG_READ_LTCBH: REG_READ_LTCBH,
+    REG_READ_LTCBM: REG_READ_LTCBM,
+    REG_READ_LTCBL: REG_READ_LTCBL,
+    REG_READ_FAULT: REG_READ_FAULT,
+    REG_WRITE_CR0: REG_WRITE_CR0,
+    REG_WRITE_CR1: REG_WRITE_CR1,
+    REG_WRITE_MASK: REG_WRITE_MASK,
+    REG_WRITE_CJHF: REG_WRITE_CJHF,
+    REG_WRITE_CJLF: REG_WRITE_CJLF,
+    REG_WRITE_LTHFTH: REG_WRITE_LTHFTH,
+    REG_WRITE_LTHFTL: REG_WRITE_LTHFTL,
+    REG_WRITE_LTLFTH: REG_WRITE_LTLFTH,
+    REG_WRITE_LTLFTL: REG_WRITE_LTLFTL,
+    REG_WRITE_CJTO: REG_WRITE_CJTO,
+    REG_WRITE_CJTH: REG_WRITE_CJTH,
+    REG_WRITE_CJTL: REG_WRITE_CJTL,
+    CR0_READ_ONE: CR0_READ_ONE,
+    CR0_READ_CONT: CR0_READ_CONT,
+    B_TYPE: B_TYPE,
+    E_TYPE: E_TYPE,
+    J_TYPE: J_TYPE,
+    K_TYPE: K_TYPE,
+    N_TYPE: N_TYPE,
+    R_TYPE: R_TYPE,
+    S_TYPE: S_TYPE,
+    T_TYPE: T_TYPE,
+    MAX31856: MAX31856,
 };

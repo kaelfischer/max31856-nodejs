@@ -9,12 +9,12 @@ const cr0 = sensor.cr0Register();
 const cr1 = sensor.cr1Register();
 const faultByte = sensor.faultRegister();
 
-console.log('CR0: ' + Number(cr0 ).toString(2));
-console.log('CMODE: ' + Number((cr0 & 0b10000000)>0).toString());
+console.log('CR0: ' + Number(cr0).toString(2));
+console.log('CMODE: ' + Number((cr0 & 0b10000000) > 0).toString());
 
 console.log('CR1: ' + Number(cr1).toString(2));
 console.log('Thermocouple Type: ' + sensor.tcType());
-console.log('Average '+ sensor.avgSamples() + ' samples');
+console.log('Average ' + sensor.avgSamples() + ' samples');
 
 console.log('FR:' + Number(faultByte).toString(2));
 console.log(sensor.faults());
