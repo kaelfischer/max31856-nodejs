@@ -44,14 +44,17 @@ const CR0_READ_ONE = 0x40; //# One shot reading, delay approx. 200ms then read t
 const CR0_READ_CONT = 0x80; //# Continuous reading, delay approx. 100ms between readings;
 
 //  Thermocouple Types
-const B_TYPE = 0x0 
-const E_TYPE = 0x1 
-const J_TYPE = 0x2 
-const K_TYPE = 0x3 
-const N_TYPE = 0x4 
-const R_TYPE = 0x5 
-const S_TYPE = 0x6 
-const T_TYPE = 0x7 
+const B_TYPE = 0x0;
+const E_TYPE = 0x1;
+const J_TYPE = 0x2;
+const K_TYPE = 0x3;
+const N_TYPE = 0x4;
+const R_TYPE = 0x5;
+const S_TYPE = 0x6;
+const T_TYPE = 0x7;
+
+const TC_TYPES = ['B','E','J','K','N','R','S','T'];
+const SAMPLES = [1,2,4,8,16]
 
 const FAULTS = ['Thermocouple Open-Circuit Fault',
 				'Overvoltage or Undervoltage Input Fault',
@@ -60,27 +63,31 @@ const FAULTS = ['Thermocouple Open-Circuit Fault',
 				'Cold-Junction Low Fault',
 				'Cold-Junction High Fault',
 				'Thermocouple Out-of-Range',
-				'Cold Junction Out-of-Range',]
+				'Cold Junction Out-of-Range',];
 
 
 class MAX31856 {
     constructor(bus,device,tcType) {
-	// use slow speed for better results on noisy prototype boards
-	this._device = spi.openSync(bus, device,
-				    {mode:spi.MODE3,
-				     maxSpeedHz: 50000});
-	//console.log('device: ' + this._device);
-	// set continuious read
-	this.writeRegister(REG_WRITE_CR0, CR0_READ_CONT);
+        // use slow speed for better results on noisy prototype boards
+        this._device = spi.openSync(bus, device,
+            {
+                mode: spi.MODE3,
+                maxSpeedHz: 50000
+            });
+        //console.log('device: ' + this._device);
 
-	// set TC type ans # of samples = 4
-	this.writeRegister(REG_WRITE_CR1,(0x2 << 4) + tcType);
+        // set TC type ans # of samples = 4
+        this.writeRegister(REG_WRITE_CR1, (0x2 << 4) + tcType);
 
-	return this;
+        // set continuious read
+        this.writeRegister(REG_WRITE_CR0, CR0_READ_CONT);
+
+
+        return this;
     }
     
     readRegister(registerAddress) {
-	var message = [{sendBuffer: Buffer.from([registerAddress, 0x00]),
+	let message = [{sendBuffer: Buffer.from([registerAddress, 0x00]),
 		      receiveBuffer: Buffer.alloc(2),
 		      byteLength: 2
 		     }];
@@ -104,23 +111,32 @@ class MAX31856 {
         //console.log(msb);
         //console.log(hsb);
         
-		var tempBytes = (((hsb & 0x7F) << 16) + (msb << 8) + lsb);
+		let tempBytes = (((hsb & 0x7F) << 16) + (msb << 8) + lsb);
 		tempBytes = tempBytes >> 5;
 
 		if (hsb & 0x80) {
 			tempBytes -= 2**(CONST_THERM_BITS -1);
 		}
-		const tempC = tempBytes*CONST_THERM_LSB;
-		return tempC;
+		return tempBytes*CONST_THERM_LSB
     }
-    
+
+
+    cr0Register() {
+        return this.readRegister(REG_READ_CR0)
+    }
+
+
+    cr1Register () {
+        return this.readRegister(REG_READ_CR1)
+    }
+
+
     faultRegister() {
-		const faultByte = this.readRegister(REG_READ_FAULT);
-		return faultByte;
+		return this.readRegister(REG_READ_FAULT)
 	}
 	
 	faults() {
-		var rv = [];
+		let rv = [];
 		const mask = 0x1;
 		const faultByte = this.faultRegister();
 		for (let i of Array(8).keys()) {
@@ -130,6 +146,22 @@ class MAX31856 {
 		}
 		return rv;	
 	}
+
+	tcType() {
+        const cr1 = this.cr1Register();
+        return TC_TYPES[cr1 & 0b1111];
+    }
+
+    avgSamples(){
+        const cr1 = this.cr1Register();
+        const nibble = cr1 >> 4;
+        if (nibble > 3){
+            return 16
+        } else {
+            return SAMPLES[nibble]
+        }
+
+    }
 }
 
 
