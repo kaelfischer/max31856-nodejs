@@ -1,6 +1,6 @@
 {
   "name": "max31856",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Node interface to the max31865 thermocouple converter over SPI on Raspberry Pi, BeagleBone, etc.",
   "main": "max31856.js",
   "scripts": {
