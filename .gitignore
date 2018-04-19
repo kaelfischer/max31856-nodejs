@@ -105,3 +105,6 @@ typings/
 
 # next.js build output
 .next
+
+.idea
+/npm-debug.log
