@@ -57,7 +57,8 @@ const T_TYPE = 0x7;
 const TC_TYPES = ['B', 'E', 'J', 'K', 'N', 'R', 'S', 'T'];
 const SAMPLES = [1, 2, 4, 8, 16];
 
-const FAULTS = ['Thermocouple Open-Circuit Fault',
+const FAULTS = [
+    'Thermocouple Open-Circuit Fault',
     'Overvoltage or Undervoltage Input Fault',
     'Thermocouple Temperature Low Fault',
     'Thermocouple Temperature High Fault',
